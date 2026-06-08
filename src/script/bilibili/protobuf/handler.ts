@@ -289,7 +289,8 @@ export const handleSearchAllResponse: Middleware = (ctx, next) => {
 };
 
 export const handleRequest: Middleware = async (ctx, next) => {
-    const { headers, bodyBytes, h2_trailers } = await fetchBilibili(ctx);
+    const { status, headers, bodyBytes, h2_trailers } = await fetchBilibili(ctx);
+    ctx.response.status = status;
     ctx.response.headers = headers;
     ctx.response.bodyBytes = bodyBytes;
     ctx.response.h2_trailers = h2_trailers;
@@ -303,13 +304,21 @@ export const handleDmSegMobileReq: Middleware = async (ctx, next) => {
     if (message.type !== 1) exit();
     const { pid, oid } = message;
     const videoId = toBvid(pid);
-    const [{ headers, bodyBytes, h2_trailers }, segments] = await Promise.all([
+    Logger.debug('[Airborne] Request', { videoId, cid: oid, type: message.type });
+
+    const [{ status, headers, bodyBytes, h2_trailers }, segments] = await Promise.all([
         fetchBilibili(ctx, 1),
         fetchSponsorBlock(videoId, oid),
     ]);
+    ctx.response.status = status;
     ctx.response.headers = headers;
     ctx.response.bodyBytes = bodyBytes;
     ctx.response.h2_trailers = h2_trailers;
+    Logger.debug('[Airborne] Upstream response', {
+        status,
+        bodyLength: bodyBytes.length,
+        segments: segments.length,
+    });
     if (segments.length) {
         ctx.state.segments = segments;
         return next();
@@ -367,7 +376,9 @@ async function fetchSponsorBlock(videoId: string, cid: string): Promise<number[]
             return [];
         }
 
-        return parseSegments(body);
+        const segments = parseSegments(body);
+        Logger.debug('[SponsorBlock] Parsed', { videoId, count: segments.length, segments });
+        return segments;
     } catch (e) {
         Logger.info('[SponsorBlock]', e);
 
@@ -386,7 +397,14 @@ function parseSegments(body: string): number[][] {
 
 export const handleDmSegMobileReply: Middleware = (ctx, next) => {
     const message = DmSegMobileReply.fromBinary(ctx.response.bodyBytes);
-    message.elems.push(...createAirborneDanmaku(ctx.state.segments));
+    const airborneDanmaku = createAirborneDanmaku(ctx.state.segments);
+    const before = message.elems.length;
+    message.elems.push(...airborneDanmaku);
+    Logger.debug('[Airborne] Injected', {
+        before,
+        added: airborneDanmaku.length,
+        after: message.elems.length,
+    });
     ctx.response.bodyBytes = DmSegMobileReply.toBinary(message);
     return next();
 };
