@@ -15,14 +15,14 @@ http:
       require-body: true
       binary-mode: true
       timeout: 10
-      argument: '{"logLevel":"4"}'
+      argument: '{"logLevel":"1"}'
     - match: '^https:\/\/(?:grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.app\.view(?:unite)?\.v1\.View\/ViewProgress$'
       name: bilibili.airborne.response
       type: response
       require-body: true
       binary-mode: true
       timeout: 10
-      argument: '{"sponsorBlock":true,"logLevel":"4"}'
+      argument: '{"sponsorBlock":true,"logLevel":"1"}'
 
 script-providers:
   bilibili.airborne.request:
