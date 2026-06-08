@@ -26,8 +26,8 @@ http:
 
 script-providers:
   bilibili.airborne.request:
-    url: https://raw.githubusercontent.com/karllee830/Sparkle/refs/heads/master/dist/bilibili.protobuf.request.js
+    url: https://raw.githubusercontent.com/karllee830/Sparkle/refs/heads/master/dist/bilibili.protobuf.request.js?v=20260608-8560e56
     interval: 86400
   bilibili.airborne.response:
-    url: https://raw.githubusercontent.com/karllee830/Sparkle/refs/heads/master/dist/bilibili.protobuf.response.js
+    url: https://raw.githubusercontent.com/karllee830/Sparkle/refs/heads/master/dist/bilibili.protobuf.response.js?v=20260608-8560e56
     interval: 86400
